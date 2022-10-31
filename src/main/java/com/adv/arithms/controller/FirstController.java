@@ -1,5 +1,7 @@
 package com.adv.arithms.controller;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -14,10 +16,13 @@ import com.adv.arithms.dto.FirstDTO;
 @RestController
 public class FirstController {
 
+	private Logger LOGGER = LogManager.getLogger(FirstController.class);
+
 	@GetMapping("/welcome")
 	public ResponseEntity<String> welcome() {
 		ResponseEntity<String> responseEntity = new ResponseEntity<>(
 					"Welcome to micro services . . .", HttpStatus.OK);
+		LOGGER.info(responseEntity);
 		return responseEntity;
 	}
 
@@ -35,6 +40,7 @@ public class FirstController {
 				@PathVariable(value = "lastname") String lastName) {
 		ResponseEntity<String> responseEntity = new ResponseEntity<>(
 					"Welcome " + firstName + " " + lastName + " to micro services ", HttpStatus.OK);
+		LOGGER.info(responseEntity);
 		return responseEntity;
 	}
 
@@ -43,6 +49,7 @@ public class FirstController {
 		String message = "welcome " + firstDto.getFirstName() + " " + firstDto.getLastName()
 					+ " to microservice";
 		System.out.println(message);
+		LOGGER.info(message);
 		ResponseEntity<Void> responseEntity = new ResponseEntity<>(HttpStatus.CREATED);
 		return responseEntity;
 
