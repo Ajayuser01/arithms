@@ -1,5 +1,6 @@
 package com.adv.arithms.service.impl;
 
+import java.io.Console;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -30,7 +31,7 @@ public class StudentServiceImpl implements StudentService {
 						.getConnection("jdbc:mysql://localhost:3306/student_det", "root", "ajay");
 			Statement stmt = connection.createStatement();
 			ResultSet rs = stmt
-						.executeQuery("SELECT st.id as student_id, st.name, st.section, st.standard, st.mobile, ad.id as address_id, ad.district, ad.pincode FROM students01 st inner join address ad on st.address=ad.id");
+						.executeQuery("SELECT st.id as student_id, st.name, st.section, st.standard, st.mobile, ad.id as address_id, ad.district, ad.pincode FROM students02 st inner join address02 ad on st.address_id=ad.id");
 			int i = 0;
 			// Iterate Resultset
 			while (rs.next()) {
@@ -85,7 +86,7 @@ public class StudentServiceImpl implements StudentService {
 			Statement stmt = connection.createStatement();
 			ResultSet rs = stmt
 						.executeQuery("SELECT st.id as student_id, st.name, st.section, st.standard, st.mobile, ad.id as address_id, ad.district, ad.pincode"
-									+ " FROM students01 st inner join address ad on st.address=ad.id where st.id ="
+									+ " FROM students02 st inner join address02 ad on st.address_id=ad.id where st.id ="
 									+ studentId);
 			while (rs.next()) {
 				int id = rs.getInt("student_id");
@@ -125,19 +126,31 @@ public class StudentServiceImpl implements StudentService {
 			Class.forName("com.mysql.cj.jdbc.Driver");
 			Connection connection = DriverManager
 						.getConnection("jdbc:mysql://localhost:3306/student_det", "root", "ajay");
-		//	PreparedStatement pStmt = connection
-			//			.prepareStatement("insert into students01 (name, section, standard, mobile) values (?, ?, ?, ?)");
 			PreparedStatement pStmt = connection
-						.prepareStatement("Begin;insert into students01 (name, section, standard, mobile) values (?, ?, ?, ?);insert into address (id,district,pincode)values(?,?,?);COMMIT");
-			pStmt.setString(1, studentDto.getName());
-			pStmt.setString(2, studentDto.getSection());
-			pStmt.setString(3, studentDto.getStandard());
-			pStmt.setString(4, studentDto.getMobile());
-			pStmt.setInt(5, studentDto.getAddress().getId());
-			pStmt.setString(6, studentDto.getAddress().getDistrict());
-			pStmt.setInt(7, studentDto.getAddress().getPincode());
+						.prepareStatement("INSERT INTO student_det.address02 (id, district, pincode) VALUES (?,?,?)");
+			pStmt.setInt(1, studentDto.getAddress().getId());
+			pStmt.setString(2, studentDto.getAddress().getDistrict());
+			pStmt.setInt(3, studentDto.getAddress().getPincode());
 			boolean insertStatus = pStmt.execute();
-			log.info("Student Creation Status = " + insertStatus);
+			log.info("Address Creation Status = " + insertStatus);
+			PreparedStatement pStmt1 = connection
+						.prepareStatement("insert into students02 (name, section, standard, mobile,address_id) values (?, ?, ?, ?,?)");
+			ResultSet resSet = pStmt.executeQuery("select max(id) from student_det.address02");
+			int id = 0;
+			while (resSet.next()) {
+				 id = resSet.getInt(1);
+			}
+//			PreparedStatement pStmt = connection
+//						.prepareStatement("Begin;insert into students01 (name, section, standard, mobile) values (?, ?, ?, ?)insert into address (id,district,pincode)values(?,?,?);COMMIT");
+			pStmt1.setString(1, studentDto.getName());
+			pStmt1.setString(2, studentDto.getSection());
+			pStmt1.setString(3, studentDto.getStandard());
+			pStmt1.setString(4, studentDto.getMobile());
+			pStmt1.setInt(5, id);
+//			pStmt.setString(6, studentDto.getAddress().getDistrict());
+//			pStmt.setInt(7, studentDto.getAddress().getPincode());
+			boolean insertStatus1 = pStmt1.execute();
+			log.info("Student Creation Status = " + insertStatus1);
 		} catch (ClassNotFoundException | SQLException ex) {
 			ex.printStackTrace();
 		}
@@ -151,8 +164,9 @@ public class StudentServiceImpl implements StudentService {
 			Class.forName("com.mysql.cj.jdbc.Driver");
 			Connection connection = DriverManager
 						.getConnection("jdbc:mysql://localhost:3306/student_det", "root", "ajay");
+			int addId=getParticularStudent(studentId).getAddress().getId();
 			PreparedStatement pStmt = connection
-						.prepareStatement("update students01 set name=?, section=?, standard=?, mobile=? where id=?");
+						.prepareStatement("update students02 set name=?, section=?, standard=?, mobile=? where id=?");
 			pStmt.setString(1, studentDto.getName());
 			pStmt.setString(2, studentDto.getSection());
 			pStmt.setString(3, studentDto.getStandard());
@@ -160,7 +174,14 @@ public class StudentServiceImpl implements StudentService {
 			pStmt.setInt(5, studentId);
 			// Execute Query
 			boolean updateStatus = pStmt.execute();
-			log.info("Student Creation Status = " + updateStatus);
+			log.info("Student PUT Status = " + updateStatus);
+			PreparedStatement pStmt1 = connection
+						.prepareStatement("update address02 set district=?, pincode=? where id=?");
+			pStmt1.setInt(3, addId);
+			pStmt1.setString(1, studentDto.getAddress().getDistrict());
+			pStmt1.setInt(2, studentDto.getAddress().getPincode());
+			boolean insertStatus1 = pStmt1.execute();
+			log.info("Address PUT Status = " + insertStatus1);
 		} catch (ClassNotFoundException | SQLException ex) {
 			ex.printStackTrace();
 		}
@@ -175,15 +196,27 @@ public class StudentServiceImpl implements StudentService {
 			Connection connection = DriverManager
 						.getConnection("jdbc:mysql://localhost:3306/student_det", "root", "ajay");
 			StudentDto studentDtoFromDb = dataFromIpToDB(studentId, studentDto);
+			int addId=getParticularStudent(studentId).getAddress().getId();
 			PreparedStatement pStmt = connection
-						.prepareStatement("update students01 set name=?, section=?, standard=?, mobile=? where id=?");
+						.prepareStatement("update students02 set name=?, section=?, standard=?, mobile=? where id=?");
 			pStmt.setString(1, studentDtoFromDb.getName());
+			log.info("Patch Db :: "+studentDtoFromDb.getName());
 			pStmt.setString(2, studentDtoFromDb.getSection());
 			pStmt.setString(3, studentDtoFromDb.getStandard());
 			pStmt.setString(4, studentDtoFromDb.getMobile());
 			pStmt.setInt(5, studentDtoFromDb.getId());
+			log.info("Patch Db :: "+studentDtoFromDb);
+			log.info("StudentDTO patch updated successfully ---------");
 			boolean updateStatus = pStmt.execute();
 			log.info("Student Creation Status = " + updateStatus);
+			PreparedStatement pStmt1 = connection
+						.prepareStatement("update address02 set district=?, pincode=? where id=?");
+			pStmt1.setInt(3, addId);
+			pStmt1.setString(1, studentDtoFromDb.getAddress().getDistrict());
+			pStmt1.setInt(2, studentDtoFromDb.getAddress().getPincode());
+			log.info("Patch Db add :: "+studentDtoFromDb.getAddress());
+			boolean insertStatus1 = pStmt1.execute();
+			log.info("Address PUT Status = " + insertStatus1);
 		} catch (ClassNotFoundException | SQLException ex) {
 			ex.printStackTrace();
 		}
@@ -203,6 +236,12 @@ public class StudentServiceImpl implements StudentService {
 		if (studentDto.getStandard() != null) {
 			studentDtoFromDb.setStandard(studentDto.getStandard());
 		}
+		if (studentDto.getAddress().getDistrict() != null) {
+			studentDtoFromDb.getAddress().setDistrict(studentDto.getAddress().getDistrict());
+		}
+		if (studentDto.getAddress().getPincode() != 0) {
+			studentDtoFromDb.getAddress().setPincode(studentDto.getAddress().getPincode());
+		}
 		return studentDtoFromDb;
 	}
 
@@ -212,9 +251,11 @@ public class StudentServiceImpl implements StudentService {
 			Class.forName("com.mysql.cj.jdbc.Driver");
 			Connection connection = DriverManager
 						.getConnection("jdbc:mysql://localhost:3306/student_det", "root", "ajay");
+			
+			int addId=getParticularStudent(studentId).getAddress().getId();
+			log.info("address id :: " +addId);
 			PreparedStatement pStmt = connection
-						.prepareStatement("delete from students01 where id= ?");
-			pStmt.setInt(1, studentId);
+						.prepareStatement("delete from address02 where id="+addId);
 			boolean updateStatus = pStmt.execute();
 			log.info("Student Deletetion Status = " + updateStatus);
 		} catch (ClassNotFoundException | SQLException ex) {

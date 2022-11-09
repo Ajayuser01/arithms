@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -20,6 +21,7 @@ import com.adv.arithms.dto.StudentDto;
 import com.adv.arithms.service.StudentService;
 
 @RestController
+@CrossOrigin(origins = "http://127.0.0.1:5500")
 public class StudentsController {
 
 	private Logger logger = LogManager.getLogger(StudentsController.class);
